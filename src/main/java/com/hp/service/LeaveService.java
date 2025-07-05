@@ -40,10 +40,9 @@ public class LeaveService {
 				response.put("message", "Leave Already Exist");
 			} else {
 				if(leave.getProgressive_leave().equalsIgnoreCase("true")) {
-					float ipm = leave.getLeaves_count()/12;
+					float ipm = (float)leave.getLeaves_count()/12;
 					leave.setInc_per_month(ipm);
 				}
-				
 				leave.setStatus("Active");
 				leave.setCreatedAt(new Date());
 				leave.setEmployee_id(0);
@@ -333,7 +332,7 @@ public class LeaveService {
 	                for (EmployeeLeaves el : employeeLeave) {
 	                    if (el.getLeave_id() == leave.getSno()) {
 	                        found = true;
-	                        if (leave.getProgressive_leave().equalsIgnoreCase("True")) {
+	                        if (leave.getInc_per_month() > 0) {
 	                            Date lastUpdated = el.getCreatedAt();
 	                            boolean alreadyUpdatedThisMonth = false;
 
@@ -349,8 +348,8 @@ public class LeaveService {
 	                            }
 
 	                            if (!alreadyUpdatedThisMonth) {
-	                                float updatedLeave = el.getTotal_leaves() + 1.25f;
-	                                float remdLeave = el.getRemaining_leave() + 1.25f;
+	                                float updatedLeave = el.getTotal_leaves() + leave.getInc_per_month();
+	                                float remdLeave = el.getRemaining_leave() + leave.getInc_per_month();
 	                                el.setTotal_leaves(updatedLeave);
 	                                el.setRemaining_leave(remdLeave);
 	                                el.setCreatedAt(new Date());
@@ -385,9 +384,9 @@ public class LeaveService {
 	                newEl.setEmployee_id(Integer.parseInt(employee_id));
 	                newEl.setLeave_id(leave.getSno());
 
-	                if (leave.getProgressive_leave().equalsIgnoreCase("True")) {
-	                    newEl.setTotal_leaves(1.25f);
-	                    newEl.setRemaining_leave(1.25f);
+	                if (leave.getInc_per_month() > 0) {
+	                    newEl.setTotal_leaves(leave.getInc_per_month());
+	                    newEl.setRemaining_leave(leave.getInc_per_month());
 	                } else {
 	                    newEl.setTotal_leaves(leave.getLeaves_count());
 	                    newEl.setRemaining_leave(leave.getLeaves_count());

@@ -113,7 +113,7 @@ public class EmployeeService {
 							el.setEmployee_id(i);
 							el.setCreatedAt(new Date());
 							for (Leaves es : employeeLeaves) {
-								if(es.getProgressive_leave().equalsIgnoreCase("true")){
+								if(es.getInc_per_month() > 0){
 									SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 									Date joiningDate = employeeDetail.getJoining_date(); // Replace with your actual method
 
@@ -123,8 +123,8 @@ public class EmployeeService {
 									int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
 
 									if (dayOfMonth >= 1 && dayOfMonth <= 10) {
-									    el.setTotal_leaves(1.5f);
-									    el.setRemaining_leave(1.5f);
+									    el.setTotal_leaves(es.getInc_per_month());
+									    el.setRemaining_leave(es.getInc_per_month());
 									} else {
 									    el.setTotal_leaves(0f);
 									    el.setRemaining_leave(0f);
