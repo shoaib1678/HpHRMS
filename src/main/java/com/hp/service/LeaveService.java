@@ -18,6 +18,7 @@ import com.hp.model.Attendance;
 import com.hp.model.EmployeeDetails;
 import com.hp.model.EmployeeLeaves;
 import com.hp.model.EmployeeSalary;
+import com.hp.model.Leave;
 import com.hp.model.LeaveRequest;
 import com.hp.model.Leaves;
 import com.hp.model.Planned_Leave;
@@ -28,6 +29,8 @@ public class LeaveService {
 
 	@Autowired
 	CommonDao commonDao;
+	@Autowired
+	EmailService emailService;
 
 	public Map<String, Object> add_leaves(Leaves leave) {
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -123,6 +126,63 @@ public class LeaveService {
 					leave.setCreatedAt(new Date());
 					int i = commonDao.addDataToDb(leave);
 					if (i > 0) {
+						Map<String, Object> mpp = new HashMap<String, Object>();
+						mpp.put("sno", leave.getEmployee_id());
+						List<EmployeeDetails> emp = (List<EmployeeDetails>) commonDao.getDataByMap(mpp, new EmployeeDetails(), null, null,0, -1);
+						Map<String, Object> mp = new HashMap<String, Object>();
+						mp.put("sno", leave.getLeave_id());
+						List<Leaves> lv = (List<Leaves>) commonDao.getDataByMap(mp, new Leaves(), null, null,0, -1);
+						SimpleDateFormat formatter = new SimpleDateFormat("dd MMM yyyy");
+
+						String frmdate = formatter.format(leave.getFromDate());
+						String tdate = formatter.format(leave.getToDate());
+						
+						String subject = "Request for Leave Approval: "+emp.get(0).getFirst_name()+" "+emp.get(0).getLast_name()+", "+frmdate+" to "+tdate+"";
+						String message = "<html>"
+							    + "<body style='font-family: Arial, sans-serif; color: #333;'>"
+							    + "<div style='max-width:600px; margin:auto; padding:20px; border:1px solid #ccc; border-radius:10px;'>"
+
+							    // Logo
+							    + "<div style='text-align:center; margin-bottom:20px;'>"
+							    + "<img src='https://haliconpub.com/assets/img/hlogo.png' alt='Halicon Publication Logo' style='max-width:200px;'>"
+							    + "</div>"
+
+							    + "<h2 style='color: #2e6c80;'>Leave Request Submitted</h2>"
+							    + "<p>Dear <strong>Sir/Ma'am</strong>,</p>"
+							    + "<p>This is to request leave for the following period:</p>"
+
+							    // Leave Details Table
+							    + "<table style='width:100%; margin-top:15px; border-collapse: collapse;'>"
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Employee Name:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+emp.get(0).getFirst_name()+" "+emp.get(0).getLast_name()+"</strong></td></tr>"
+
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Type of Leave:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+lv.get(0).getLeaves_name()+"</strong></td></tr>"
+
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>From Date:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+frmdate+"</strong></td></tr>"
+
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>To Date:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+tdate+"</strong></td></tr>"
+
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Number of Days:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+leave.getLeave_days()+" Days</strong></td></tr>"
+
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Reason:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+leave.getReason()+"</strong></td></tr>"
+							    + "</table>"
+
+							    + "<p>I kindly request you to review and approve the above leave request at your earliest convenience.</p>"
+
+							    + "<br><p>Thank you,<br>"
+							    + "<strong>"+emp.get(0).getFirst_name()+" "+emp.get(0).getLast_name()+"</strong><br>"
+							    + "Halicon Publication</p>"
+
+							    + "</div>"
+							    + "</body>"
+							    + "</html>";
+						String eml = "haliconpublication@gmail.com";
+						emailService.sendEmailMessage(eml, subject, message);
 						response.put("status", "Success");
 						response.put("message", "Leave Sent for approval");
 					} else {
@@ -205,6 +265,9 @@ public class LeaveService {
 					null, 0, -1);
 			empl.get(0).setRemaining_leave(empl.get(0).getRemaining_leave() - leave.get(0).getLeave_days());
 			commonDao.updateDataToDb(empl.get(0));
+			Map<String, Object> mpp = new HashMap<String, Object>();
+			mpp.put("sno", leave.get(0).getEmployee_id());
+			List<EmployeeDetails> emp = (List<EmployeeDetails>) commonDao.getDataByMap(mpp, new EmployeeDetails(), null, null,0, -1);
 			if (leave.size() > 0) {
 
 				Calendar calendar = Calendar.getInstance();
@@ -232,12 +295,71 @@ public class LeaveService {
 						commonDao.updateDataToDb(leave.get(0));
 						response.put("status", "Success");
 						response.put("message", "Leave approved successfully");
+						String subject ="Leave Approval Confirmation from Halicon Publication";
+						String message = "<html>"
+							    + "<body style='font-family: Arial, sans-serif; color: #333;'>"
+							    + "<div style='max-width:600px; margin:auto; padding:20px; border:1px solid #ccc; border-radius:10px;'>"
+							    + "<div style='text-align:center; margin-bottom:20px;'>"
+							    + "<img src='https://haliconpub.com/assets/img/hlogo.png' alt='Company Logo' style='max-width:200px;'>"
+							    + "</div>"
+							    + "<h2 style='color: #2e6c80;'>Leave Approval Notification</h2>"
+							    + "<p>Dear <strong> "+emp.get(0).getFirst_name()+" "+emp.get(0).getLast_name()+"</strong>,</p>"
+							    + "<p>Your leave request from <strong>"+leave.get(0).getFromDate()+"</strong> to <strong>"+leave.get(0).getToDate()+"</strong> has been <span style='color:green;'><strong>approved</strong></span>.</p>"
+							    + "<table style='width:100%; margin-top:15px; border-collapse: collapse;'>"
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Type of Leave:</td><td style='padding:8px; border:1px solid #ccc;'><strong>"+leaves.get(0).getLeaves_name()+"</strong></td></tr>"
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Number of Days:</td><td style='padding:8px; border:1px solid #ccc;'><strong>"+leave.get(0).getLeave_days()+" Days</strong></td></tr>"
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Reason:</td><td style='padding:8px; border:1px solid #ccc;'><strong>"+leave.get(0).getReason()+"</strong></td></tr>"
+							    + "</table>"
+							    + "<p>Please ensure proper handover of responsibilities before proceeding on leave.</p>"
+							    + "<p>If you have any questions, feel free to reach out.</p>"
+							    + "<br>"
+							    + "<p>Best regards,<br><strong>Halicon Publication</strong></p>"
+							    + "</div>"
+							    + "</body>"
+							    + "</html>";
+						emailService.sendEmailMessage(emp.get(0).getEmail(), subject, message);
+
 					} else {
+						leave.get(0).setRemarks(remarks);
 						leave.get(0).setDate(new Date());
 						leave.get(0).setStatus("Rejected");
 						commonDao.updateDataToDb(leave.get(0));
 						response.put("status", "Success");
 						response.put("message", "Leave rejected successfully");
+						String subject = "Leave Rejection Notification from Halicon Publication";
+						String message = "<html>"
+							    + "<body style='font-family: Arial, sans-serif; color: #333;'>"
+							    + "<div style='max-width:600px; margin:auto; padding:20px; border:1px solid #f44336; border-radius:10px;'>"
+
+							    + "<div style='text-align:center; margin-bottom:20px;'>"
+							    + "<img src='https://haliconpub.com/assets/img/hlogo.png' alt='Halicon Publication Logo' style='max-width:200px;'>"
+							    + "</div>"
+
+							    + "<h2 style='color: #f44336;'>Leave Request Rejected</h2>"
+							    + "<p>Dear <strong>"+emp.get(0).getFirst_name()+" "+emp.get(0).getLast_name()+"</strong>,</p>"
+							    + "<p>We regret to inform you that your leave request from <strong>"+leave.get(0).getFromDate()+"</strong> to <strong>"+leave.get(0).getToDate()+"</strong> has been "
+							    + "<span style='color:red;'><strong>rejected</strong></span> by <strong>Halicon Publication</strong>.</p>"
+
+							    + "<table style='width:100%; margin-top:15px; border-collapse: collapse;'>"
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Type of Leave:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+leaves.get(0).getLeaves_name()+"</strong></td></tr>"
+
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Number of Days:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+leave.get(0).getLeave_days()+" Days</strong></td></tr>"
+
+							    + "<tr><td style='padding:8px; border:1px solid #ccc;'>Reason:</td>"
+							    + "<td style='padding:8px; border:1px solid #ccc;'><strong>"+leave.get(0).getReason()+"</strong></td></tr>"
+							    + "</table>"
+
+							    + "<p><strong>Remarks:</strong> "+leave.get(0).getRemarks()+"</p>"
+							    + "<p>If you have any questions or wish to discuss this further, please contact the HR department.</p>"
+
+							    + "<br><p>Best regards,<br>"
+							    + "Halicon Publication</p>"
+							    + "</div>"
+							    + "</body>"
+							    + "</html>";
+						emailService.sendEmailMessage(emp.get(0).getEmail(), subject, message);
 					}
 					calendar.add(Calendar.DATE, 1);
 				}

@@ -26,7 +26,7 @@
 						<div class=" " style="float: right; margin-top: 1rem;">
 							<button type="button" class="btn btn-secondary btn-sm"
 								data-bs-dismiss="modal" aria-label="Close">Close</button>
-							<button type="submit" class="btn btn-primary btn-sm">Save
+							<button type="button" class="btn btn-primary btn-sm" id="bbt" onclick="hitting()">Save
 							</button>
 						</div>
 					</div>
