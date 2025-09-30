@@ -42,6 +42,7 @@ public class EmployeeDetails {
 	private String profile_picture;
 	private String bank_name;
 	private String account_number;
+	private String authentication_id;
 	private String ifsc_code;
 	private String epf_no;
 	private String status;
@@ -124,6 +125,12 @@ public class EmployeeDetails {
 	}
 	public void setContact_number(String contact_number) {
 		this.contact_number = contact_number;
+	}
+	public String getAuthentication_id() {
+		return authentication_id;
+	}
+	public void setAuthentication_id(String authentication_id) {
+		this.authentication_id = authentication_id;
 	}
 	public String getGender() {
 		return gender;

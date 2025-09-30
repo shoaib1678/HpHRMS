@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 @Entity
 public class LoginCredentials {
@@ -22,6 +23,10 @@ public class LoginCredentials {
 	private Date createdAt;
 	private String status;
 	private String updatedAt;
+	@Transient
+	private String authentication_id;
+	@Transient
+	private String employee_name;
 	private int employee_id;
 	@Temporal(TemporalType.DATE)
 	private Date relieving_date;
@@ -48,6 +53,12 @@ public class LoginCredentials {
 	public int getSno() {
 		return sno;
 	}
+	public String getAuthentication_id() {
+		return authentication_id;
+	}
+	public void setAuthentication_id(String authentication_id) {
+		this.authentication_id = authentication_id;
+	}
 	public void setSno(int sno) {
 		this.sno = sno;
 	}
@@ -56,6 +67,12 @@ public class LoginCredentials {
 	}
 	public void setEmail(String email) {
 		this.email = email;
+	}
+	public String getEmployee_name() {
+		return employee_name;
+	}
+	public void setEmployee_name(String employee_name) {
+		this.employee_name = employee_name;
 	}
 	public String getPassword() {
 		return password;

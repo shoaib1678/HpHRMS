@@ -469,6 +469,7 @@
 	<script type="text/javascript">
 		let employee_id = $("#employee_id").val();
 		let user_type = $("#user_type").val();
+		let authentication_id = $("#authentication_id").val();
 		let attendance_approval = $("#attendance_approval").val();
 		$('#NewEmployeeForm').on('shown.bs.modal', function () {
 			 var now = new Date();
@@ -495,6 +496,8 @@
 		        // Set values into input fields
 		        document.getElementById("latitude").value = position.coords.latitude;
 		        document.getElementById("longitude").value = position.coords.longitude;
+		        console.log("Latitude="+position.coords.latitude);
+		        console.log("longitude="+position.coords.longitude);
 		      }, function(error) {
 		        alert("Location access denied or failed.");
 		        console.error(error);
@@ -638,6 +641,7 @@
 		            const obj = {
 		                attendance_date: attendance_date,
 		                clock_out: out_time,
+		                user_type: user_type,
 		                employee_id : employeeId
 		            };
 
@@ -971,6 +975,7 @@
 			obj.user_type = user_type;
 			obj.lat = latitude;
 			obj.lon = longitude;
+			obj.authentication_id = authentication_id;
 			obj.attendance_type = 1;
 			$.ajax({
 				url : 'add_attendance',
@@ -1012,6 +1017,7 @@
 			fd.append("user_type", user_type);
 			fd.append("userLat", latitude);
 			fd.append("userLon", longitude);
+			fd.append("authentication_id", authentication_id);
 			$.ajax({
 				url : 'clock_Out',
 				type : 'post',

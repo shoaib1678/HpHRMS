@@ -369,17 +369,22 @@ public List<Attendance> pay_salary(String emp_id,String month,String year){
 	 return attendances;
 }
 
+public List<Attendance> getMonthlyShortLeaves(int employeeId, int month, int year) {
+    String hql = "FROM Attendance a " +
+                 "WHERE a.employee_id = :employeeId " +
+                 "AND MONTH(a.attendance_date) = :month " +
+                 "AND YEAR(a.attendance_date) = :year " +
+                 "AND a.reason = 'Short Leave'";
 
-//public List<TravelExpense> get_expense(String emp_id,String month,String year){
-//	 Criteria criteria = sessionFactory.getCurrentSession().createCriteria(TravelExpense.class)
-//			 	.add(Restrictions.eq("status", "Approved")) // Only update records with status "Pending"
-//		        .add(Restrictions.eq("employee_id", Integer.parseInt(emp_id)))
-//		        .add(Restrictions.sqlRestriction("MONTH(updateDate) = ?",Integer.parseInt(month),IntegerType.INSTANCE))
-//		        .add(Restrictions.sqlRestriction("YEAR(updateDate)= ?",Integer.parseInt(year),IntegerType.INSTANCE));
-//	List<TravelExpense> travelExpenses = criteria.list();
-//	 return travelExpenses;
-//	 
-//}
+    Session session = sessionFactory.getCurrentSession();
+    Query query = session.createQuery(hql);
+    query.setParameter("employeeId", employeeId);
+    query.setParameter("month", month);
+    query.setParameter("year", year);
+
+    return (List<Attendance>) query.list();
+}
+
 
 
 

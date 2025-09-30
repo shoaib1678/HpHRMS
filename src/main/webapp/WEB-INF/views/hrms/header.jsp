@@ -16,6 +16,7 @@ String receiving="";
 %>
 
 <input type="hidden" id="user_type" name="user_type" value="<%= loginCredentials.getUser_type() %>" />
+<input type="hidden" id="authentication_id" name="authentication_id" value="<%= loginCredentials.getAuthentication_id() %>" />
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
           <div class="app-brand demo">
             <a href="dashboard" class="app-brand-link">
@@ -133,8 +134,8 @@ String receiving="";
                   </li>
                  
                     <li class="menu-item">
-                     <a href="get_leaves" class="menu-link">
-                        <div data-i18n="View Leaves">View Leaves</div>
+                     <a href="leave_request" class="menu-link">
+                        <div data-i18n="Leave Request">Leave Request</div>
                      </a>
                   </li>
                   <%if(loginCredentials.getUser_type().equalsIgnoreCase("Admin")){ %>

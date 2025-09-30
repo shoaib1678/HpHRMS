@@ -256,7 +256,7 @@ int em=0;
 													<div class="col-3">
 														<div style="display: flex;justify-content: space-evenly;">
 															<p style="height: 15px;width: 15px; background: gray;"></p>
-															<p style="margin-top: -3px;">Holiday</p>
+															<p style="margin-top: -3px;">Holiday/Short Leave/Leave</p>
 														</div>
 													</div>
 													<div class="col-3">
@@ -496,12 +496,14 @@ $.ajax({
             tbody.empty();
 
             $.each(data.data, function (index, item) {
-                var row = "<tr>" +
+            	if(item.leave_name != "Short Leave"){
+            		var row = "<tr>" +
                     "<td class='text-center'>" + item.leave_name + "</td>" +
                     "<td class='text-center'>" + item.total_leaves + "</td>" +
                     "<td class='text-center'>" + item.remaining_leave + "</td>" +
                     "</tr>";
                 tbody.append(row);
+            	}
             });
         } else {
             alert("No leave data found.");

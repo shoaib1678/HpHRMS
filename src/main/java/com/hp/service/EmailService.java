@@ -16,14 +16,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 import javax.print.attribute.HashAttributeSet;
 import javax.servlet.http.HttpSession;
 
@@ -47,7 +53,7 @@ public class EmailService {
 	    Map<String, Object> response = new HashMap<>();
 	    try {
 	        final String username = "haliconpublication@gmail.com";
-	        final String password = "kmvogxpgizaxpwyp";
+	        final String password = "zuba mcid vyan ykea";
 
 	        Properties prop = new Properties();
 	        prop.put("mail.smtp.host", "smtp.gmail.com");
@@ -102,7 +108,59 @@ public class EmailService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+	public Map<String, Object> send_hp_message(String to, String subject, String messageText, MultipartFile manuscript) {
+		 Map<String, Object> response = new HashMap<>();
+		    try {
+		        final String username = "haliconpublication@gmail.com";  
+		        final String password = "zuba mcid vyan ykea";         
+
+		        Properties prop = new Properties();
+		        prop.put("mail.smtp.host", "smtp.gmail.com");
+		        prop.put("mail.smtp.port", "587");
+		        prop.put("mail.smtp.auth", "true");
+		        prop.put("mail.smtp.starttls.enable", "true");
+		        prop.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+		        prop.put("mail.smtp.ssl.protocols", "TLSv1.2");
+
+		        Session session = Session.getInstance(prop, new javax.mail.Authenticator() {
+		            protected PasswordAuthentication getPasswordAuthentication() {
+		                return new PasswordAuthentication(username, password);
+		            }
+		        });
+
+		        Message message = new MimeMessage(session);
+		        message.setFrom(new InternetAddress(username));
+		        message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+		        message.setSubject(subject);
+
+		        MimeBodyPart textBodyPart = new MimeBodyPart();
+		        textBodyPart.setText(messageText);  
+
+		        MimeBodyPart attachmentBodyPart = new MimeBodyPart();
+		        DataSource source = new ByteArrayDataSource(manuscript.getBytes(), manuscript.getContentType());  
+		        attachmentBodyPart.setDataHandler(new DataHandler(source));
+		        attachmentBodyPart.setFileName(manuscript.getOriginalFilename());  
+
+		        Multipart multipart = new MimeMultipart();
+		        multipart.addBodyPart(textBodyPart);     
+		        multipart.addBodyPart(attachmentBodyPart); 
+
+		        message.setContent(multipart);
+
+		        Transport.send(message);
+		        System.out.println("Message Sent Successfully");
+
+		        response.put("status", "Success");
+		        response.put("message", "Message sent successfully with attachment");
+
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		        response.put("status", "Error");
+		        response.put("message", "Failed to send the email: " + e.getMessage());
+		    }
+
+		    return response;
+	}
 
 	  
 	

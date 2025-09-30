@@ -60,13 +60,19 @@ public class LeaveController {
 		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
 	}
 	
-	
-	@RequestMapping(value = "/leave_request",method = RequestMethod.POST)
-	public ResponseEntity<Map<String, Object>> leave_request(@RequestBody LeaveRequest leave){
+	@RequestMapping(value = "/send_leave_request", method = RequestMethod.POST)
+	public ResponseEntity<Map<String, Object>> send_leave_request(@RequestBody LeaveRequest leave){
 		Map<String, Object> response = new HashMap<String,Object>();
 		response = leaveService.leave_request(leave);
 		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
 	}
+//	@RequestMapping(value = "/leave_request",method = RequestMethod.POST)
+//	public ResponseEntity<Map<String, Object>> leave_request(@RequestBody LeaveRequest leave){
+//		System.out.println("leave="+leave);
+//		Map<String, Object> response = new HashMap<String,Object>();
+//		response = leaveService.leave_request(leave);
+//		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
+//	}
 //	@RequestMapping(value = "/earn_leave",method = RequestMethod.POST)
 //	public ResponseEntity<Map<String, Object>> earn_leave(@RequestBody Planned_Leave leave){
 //		Map<String, Object> response = new HashMap<String,Object>();

@@ -85,7 +85,8 @@ public class AttendanceController {
 		String user_type = request.getParameter("user_type");
 		String userLat = request.getParameter("userLat");
 		String userLon = request.getParameter("userLon");
-		Map<String, Object> response = attendanceService.clock_Out(employee_id,user_type,Double.parseDouble(userLat),Double.parseDouble(userLon));
+		String authentication_id = request.getParameter("authentication_id");
+		Map<String, Object> response = attendanceService.clock_Out(employee_id,user_type,Double.parseDouble(userLat),Double.parseDouble(userLon),authentication_id);
 		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
 	}
 }

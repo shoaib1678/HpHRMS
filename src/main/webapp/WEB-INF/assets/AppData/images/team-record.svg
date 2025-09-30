@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <g id="Group_6" data-name="Group 6" transform="translate(-1211 -606)">
+    <g id="Group_4" data-name="Group 4">
+      <rect id="Rectangle_8" data-name="Rectangle 8" width="24" height="24" transform="translate(1211 606)" fill="none"/>
+      <g id="team-record" transform="translate(1207 608)">
+        <path id="Path_28" data-name="Path 28" d="M5,19.334V18.321a7.093,7.093,0,1,1,14.186,0v1.013" transform="translate(0 -1.108)" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="1"/>
+        <path id="Path_29" data-name="Path 29" d="M18.636,12.885a5.066,5.066,0,1,1,10.133,0v.507" transform="translate(-1.477 -0.738)" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="1"/>
+        <path id="Path_30" data-name="Path 30" d="M12.462,10.243A4.053,4.053,0,1,0,8.409,6.189,4.053,4.053,0,0,0,12.462,10.243Z" transform="translate(-0.369 -0.123)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <path id="Path_31" data-name="Path 31" d="M23.949,7.08a3.04,3.04,0,1,0-3.04-3.04A3.04,3.04,0,0,0,23.949,7.08Z" transform="translate(-1.723)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

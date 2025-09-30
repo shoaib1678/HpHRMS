@@ -13,15 +13,19 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hp.dao.CommonDao;
 import com.hp.model.Attendance;
 import com.hp.model.EmployeeDetails;
+import com.hp.model.EmployeeLeaves;
 import com.hp.model.EmployeeSalary;
 import com.hp.model.Leave;
 import com.hp.model.LeaveRequest;
+import com.hp.model.LoginCredentials;
 
 
 @Service
@@ -29,6 +33,8 @@ public class AttendanceService {
 
 	@Autowired
 	CommonDao commonDao;
+	@Autowired
+	private HttpServletRequest request;
 	
 	
 //	public Map<String, Object> add_attendance(Attendance details) {
@@ -85,11 +91,10 @@ public class AttendanceService {
 //	    }
 //	    return response;
 //	}
-
 	public Map<String, Object> add_attendance(Attendance details) {
 	    Map<String, Object> response = new HashMap<>();
 	    try {
-	        // Allow Admin from anywhere, restrict others
+	    	  // Allow Admin from anywhere, restrict others
 	        if (!"Admin".equalsIgnoreCase(details.getUser_type())) {
 	            double userLat = details.getLat();
 	            double userLon = details.getLon();
@@ -100,71 +105,153 @@ public class AttendanceService {
 
 	            double distance = getDistance(userLat, userLon, officeLat, officeLon);
 	            System.out.println("Distance from office: " + distance + " KM");
-
-	            if (distance > 1.5) { // 100 meters range
-	                response.put("status", "Failed");
-	                response.put("message", "You are not at the authorized office location.");
-	                return response;
+	            Map<String, Object> map = new HashMap<String, Object>();
+	        	map.put("authentication_id", details.getAuthentication_id());
+	        	map.put("sno", details.getEmployee_id());
+	        	List<EmployeeDetails> emp = (List<EmployeeDetails>)commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
+	          System.out.println("emp-=="+emp.size());
+	        	if (distance > 1.5) { // 100 meters range
+	        		if(emp.size() == 0) {
+	        			 response.put("status", "Failed");
+	 	                response.put("message", "You are not at the authorized office location.");
+	 	                return response;
+	        		}
 	            }
 	        }
 
-	        // Format date for check
+
 	        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	        String formattedDate = dateFormat.format(details.getAttendance_date());
-
-	        // Prevent duplicate
+	        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+	        String currentTime = sdf.format(new Date());
+	        details.setClock_in(currentTime);
 	        List<Attendance> attendances = commonDao.getAttendanceData(details.getEmployee_id(), formattedDate);
 	        if (!attendances.isEmpty()) {
 	            response.put("status", "Failed");
-	            response.put("message", "Attendance already marked for today.");
+	            response.put("message", "Already clocked-in today.");
+	            return response;
+	        }
+	        Map<String, Object> map = new HashMap<String, Object>();
+	        map.put("employee_id", details.getEmployee_id());
+	        List<EmployeeSalary> empService =(List<EmployeeSalary>)commonDao.getDataByMap(map, new EmployeeSalary(),	null,null, 0, -1);
+	        details.setSalary_id(empService.get(0).getSno());
+	        details.setStatus("Pending");
+	        details.setCreatedAt(new Date());
+	        details.setReason("-");
+
+	        int i = commonDao.addDataToDb(details);
+	        if (i > 0) {
+	            response.put("status", "Success");
+	            response.put("message", "Clock-in successful.");
+	        } else {
+	            response.put("status", "Failed");
+	            response.put("message", "Error during clock-in.");
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        response.put("status", "Failed");
+	        response.put("message", "Error: " + e.getMessage());
+	    }
+	    return response;
+	}
+
+
+	public Map<String, Object> clock_out_attendance(Attendance details) {
+	    Map<String, Object> response = new HashMap<>();
+	    try {
+	    	  // Allow Admin from anywhere, restrict others
+	        if (!"Admin".equalsIgnoreCase(details.getUser_type())) {
+	            double userLat = details.getLat();
+	            double userLon = details.getLon();
+
+	            // Set office location (update as per your actual location)
+	            double officeLat = 28.4576819;  // Example: Gurgaon
+	            double officeLon = 77.0449214;
+
+	            double distance = getDistance(userLat, userLon, officeLat, officeLon);
+	            System.out.println("Distance from office: " + distance + " KM");
+	            Map<String, Object> map = new HashMap<String, Object>();
+	        	map.put("authentication_id", details.getAuthentication_id());
+	        	map.put("sno", details.getEmployee_id());
+	        	List<EmployeeDetails> emp = (List<EmployeeDetails>)commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
+	          System.out.println("emp-=="+emp.size());
+	        	if (distance > 1.5) { // 100 meters range
+	        		if(emp.size() == 0) {
+	        			 response.put("status", "Failed");
+	 	                response.put("message", "You are not at the authorized office location.");
+	 	                return response;
+	        		}
+	            }
+	        }
+
+
+	        Map<String, Object> map = new HashMap<>();
+	        map.put("employee_id", details.getEmployee_id());
+	        map.put("attendance_date", details.getAttendance_date());
+
+	        List<Attendance> data = (List<Attendance>) commonDao.getDataByMap(map, new Attendance(), null, null, 0, -1);
+	        if (data.isEmpty()) {
+	            response.put("status", "Failed");
+	            response.put("message", "Clock-in not found.");
 	            return response;
 	        }
 
-	        // Salary check
-	        List<EmployeeSalary> empService = commonDao.getLatestDate(details.getEmployee_id(), formattedDate);
-	        if (!empService.isEmpty()) {
-	            // Current IST time
-	            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-	            sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
-	            String currentTime = sdf.format(new Date());
+	        Attendance attendance = data.get(0);
+	        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
 
-	            details.setSalary_id(empService.get(0).getSno());
-	            details.setStatus("Pending");
-	            details.setCreatedAt(new Date());
-	            details.setReason("-");
-	            details.setClock_in(currentTime);
+	        Date inTime = sdf.parse(attendance.getClock_in());
+	        Date outTime = sdf.parse(details.getClock_out());
 
-	            int i = commonDao.addDataToDb(details);
-	            if (i > 0) {
-	                response.put("status", "Success");
-	                response.put("message", "Attendance marked successfully.");
-	            } else {
-	                response.put("status", "Failed");
-	                response.put("message", "Something went wrong.");
-	            }
-	        } else {
-	            response.put("status", "Failed");
-	            response.put("message", "Salary not assigned to employee.");
+	        long diffMillis = outTime.getTime() - inTime.getTime();
+	        long totalMinutes = TimeUnit.MILLISECONDS.toMinutes(diffMillis);
+	        long hours = totalMinutes / 60;
+	        long minutes = totalMinutes % 60;
+
+	        attendance.setClock_out(details.getClock_out());
+	        attendance.setTotal_hours(hours + " hours " + minutes + " minutes");
+
+	        // Attendance type logic
+	        if (totalMinutes < 240) {
+	            attendance.setAttendance_type(0); // Absent
+	        } else if (totalMinutes >= 240 && totalMinutes < 450) {
+	            attendance.setAttendance_type(0.5f); // Half day
+	        }else {
+	            attendance.setAttendance_type(1); // Full day
 	        }
+
+	        // Salary ID check
+	        if (attendance.getSalary_id() == 0) {
+	            String formattedDate = new SimpleDateFormat("yyyy-MM-dd").format(details.getAttendance_date());
+	            List<EmployeeSalary> empService = commonDao.getLatestDate(details.getEmployee_id(), formattedDate);
+	            if (!empService.isEmpty()) {
+	                attendance.setSalary_id(empService.get(0).getSno());
+	            }
+	        }
+
+	        commonDao.updateDataToDb(attendance);
+	        response.put("status", "Success");
+	        response.put("message", "Clock-out successful.");
+	        response.put("data", attendance);
 
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        response.put("status", "Failed");
-	        response.put("message", "Something went wrong: " + e.getMessage());
+	        response.put("message", "Error during clock-out: " + e.getMessage());
 	    }
 	    return response;
 	}
-	public static double getDistance(double lat1, double lon1, double lat2, double lon2) {
-	    final int R = 6371; // Earth radius in KM
-	    double latDistance = Math.toRadians(lat2 - lat1);
-	    double lonDistance = Math.toRadians(lon2 - lon1);
-	    double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-	             + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-	             * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-	    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-	    return R * c;
-	}
 
+	private String getClientIp(HttpServletRequest request) {
+	    String ip = request.getHeader("X-Forwarded-For");
+	    if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+	        ip = request.getRemoteAddr();
+	    } else {
+	        ip = ip.split(",")[0];
+	    }
+	    return ip;
+	}
 
 
 	
@@ -181,9 +268,11 @@ public class AttendanceService {
 				int count = commonDao.getDataByMapSize(map, new Attendance(), null, null, 0, -1);
 				if(attendances.size() >0) {
 					for (Leave a  : attendances) {
+						
 						Map<String, Object> map3 = new HashMap<String,Object>();
 						map3.put("sno", a.getSalary_id());
 						List<EmployeeSalary> employeeSalaries = (List<EmployeeSalary>) commonDao.getDataByMap(map3, new EmployeeSalary(), null, null, 0, -1);
+						System.out.println("employeeSalaries=="+a.getSalary_id());
 						int month = a.getMonth_no();
 						Calendar calendar = Calendar.getInstance();
 						calendar.set(Calendar.MONTH, month - 1);
@@ -313,65 +402,98 @@ public class AttendanceService {
 		return response;
 	}
 
-	public Map<String, Object> clock_Out(String employee_id, String user_type, double userLat, double userLon) {
+	public Map<String, Object> clock_Out(String employee_id, String user_type, double d, double f,String authentication_id) {
 	    Map<String, Object> response = new HashMap<>();
 	    try {
+	    	  // Allow Admin from anywhere, restrict others
 	        if (!"Admin".equalsIgnoreCase(user_type)) {
-	            double officeLat = 28.4576819;
-	            double officeLon = 77.0449214;
-	            double distance = getDistance(userLat, userLon, officeLat, officeLon);
+	            double userLat = d;
+	            double userLon =f;
 
-	            if (distance > 1.5) { 
-	                response.put("status", "Failed");
-	                response.put("message", "You are not at the authorized office location.");
-	                return response;
+	            // Set office location (update as per your actual location)
+	            double officeLat = 28.4576819;  
+	            double officeLon = 77.0449214;
+
+	            double distance = getDistance(userLat, userLon, officeLat, officeLon);
+	            System.out.println("Distance from office: " + distance + " KM");
+	            Map<String, Object> map = new HashMap<String, Object>();
+	        	map.put("authentication_id", authentication_id);
+	        	map.put("sno", Integer.parseInt(employee_id));
+	        	List<EmployeeDetails> emp = (List<EmployeeDetails>)commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
+	          System.out.println("emp-=="+emp.size());
+	        	if (distance > 1.5) { // 100 meters range
+	        		if(emp.size() == 0) {
+	        			 response.put("status", "Failed");
+	 	                response.put("message", "You are not at the authorized office location.");
+	 	                return response;
+	        		}
 	            }
 	        }
-
+	        // ✅ Date/time formatters
 	        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 	        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
-
 	        SimpleDateFormat sdff = new SimpleDateFormat("yyyy-MM-dd");
 	        Date parsedDate = sdff.parse(sdff.format(new Date()));
 
+	        // ✅ Fetch today's attendance
 	        Map<String, Object> map = new HashMap<>();
 	        map.put("employee_id", Integer.parseInt(employee_id));
 	        map.put("attendance_date", parsedDate);
-
 	        List<Attendance> data = (List<Attendance>) commonDao.getDataByMap(map, new Attendance(), null, null, 0, -1);
 
 	        if (!data.isEmpty()) {
+	            Attendance attendance = data.get(0);
 	            String clock_out = sdf.format(new Date());
-	            String clock_in = data.get(0).getClock_in();
+	            String clock_in = attendance.getClock_in();
 
 	            Date inTime = sdf.parse(clock_in);
 	            Date outTime = sdf.parse(clock_out);
 
 	            long diffInMillis = outTime.getTime() - inTime.getTime();
-	            long hours = TimeUnit.MILLISECONDS.toHours(diffInMillis);
-	            long minutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis) % 60;
+	            long totalMinutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis);
+	            long hours = totalMinutes / 60;
+	            long minutes = totalMinutes % 60;
 
-	            data.get(0).setClock_out(clock_out);
-	            data.get(0).setTotal_hours(hours + " hours " + minutes + " minutes");
+	            attendance.setClock_out(clock_out);
+	            attendance.setTotal_hours(hours + " hours " + minutes + " minutes");
 
-	            commonDao.updateDataToDb(data.get(0));
+	            // ✅ Attendance type logic
+	            if (totalMinutes < 240) {
+	                attendance.setAttendance_type(0); // Absent
+	            } else if (totalMinutes >= 240 && totalMinutes < 450) {
+	                attendance.setAttendance_type(0.5f); // Half Day
+	            } else {
+	                attendance.setAttendance_type(1); // Full Day
+	            }
 
+	            // ✅ Save updated data
+	            commonDao.updateDataToDb(attendance);
 	            response.put("status", "Success");
-	            response.put("message", "Clock out Successfully");
+	            response.put("message", "Clock out successfully.");
 	        } else {
 	            response.put("status", "No_Content");
-	            response.put("message", "No Data Found");
+	            response.put("message", "No attendance found for today.");
 	        }
+
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        response.put("status", "Failed");
-	        response.put("message", "Something Went Wrong: " + e.getMessage());
+	        response.put("message", "Something went wrong: " + e.getMessage());
 	    }
 
 	    return response;
 	}
 
-
+	public static double getDistance(double lat1, double lon1, double lat2, double lon2) {
+	    final int R = 6371; // Earth radius in KM
+	    double latDistance = Math.toRadians(lat2 - lat1);
+	    double lonDistance = Math.toRadians(lon2 - lon1);
+	    double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+	             + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+	             * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+	    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	    return R * c;
+	}
 	public Map<String, Object> update_attendance(String sno, String a_type) {
 		Map<String, Object> response = new HashMap<String,Object>();
 		try {
@@ -395,39 +517,5 @@ public class AttendanceService {
 		}
 		return response;
 	}
-	public Map<String, Object> clock_out_attendance(Attendance details) {
-		Map<String, Object> response = new HashMap<String,Object>();
-		try {
-			Map<String, Object> map = new HashMap<String,Object>();
-			map.put("employee_id", details.getEmployee_id());
-			map.put("attendance_date", details.getAttendance_date());
-			List<Attendance> data =   (List<Attendance>)commonDao.getDataByMap(map, new Attendance(), null, null, 0, -1);
-			if (data.size() > 0) {
-				SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-		        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
-				String clock_out = details.getClock_out();
-	            String clock_in = data.get(0).getClock_in();
-	            Date inTime = sdf.parse(clock_in);
-	            Date outTime = sdf.parse(clock_out);
-
-	            long diffInMillis = outTime.getTime() - inTime.getTime();
-	            long hours = TimeUnit.MILLISECONDS.toHours(diffInMillis);
-	            long minutes = TimeUnit.MILLISECONDS.toMinutes(diffInMillis) % 60;
-	            data.get(0).setTotal_hours(hours + " hours " + minutes + " minutes");
-				data.get(0).setClock_out(details.getClock_out());
-				commonDao.updateDataToDb(data.get(0));
-				response.put("status", "Success");
-				response.put("message", "Clock out Successfully");
-				response.put("data", data);
-			} else {
-				response.put("status", "Failed");
-				response.put("message", "No Data Found");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			response.put("status", "Failed");
-			response.put("message", "Something Went Wrong" + e);
-		}
-		return response;
-	}
+	
 }

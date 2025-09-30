@@ -110,6 +110,11 @@ table {
 											<option value="Female">Female</option>
 										</select>
 									</div>
+									<div class="col-md-4 mb-2">
+										<label for="authentication_id" class="form-label">Authentication
+											ID</label> <input type="text" id="authentication_id" name="authentication_id"
+											class="form-control" placeholder="Authentication ID"/>
+									</div>
 								</div>
 								<div class="row p-4">
 									<h5>
@@ -416,6 +421,7 @@ table {
 					var department = $("#department").val();
 					var Designation = $("#Designation").val();
 					var JoiningDate = $("#JoiningDate").val();
+					var authentication_id = $("#authentication_id").val();
 					var salary = $("#salary").val();
 					var grade = $("#grade").val();
 					var AadharNo = $("#AadharNo").val();
@@ -433,6 +439,7 @@ table {
 					obj.email=  Email;
 					obj.grade=  grade;
 					obj.contact_number=  ContactNo;
+					obj.authentication_id=  authentication_id;
 					obj.father_name=  FatherName;
 					obj.address=  Address;
 					obj.gender=  gender;

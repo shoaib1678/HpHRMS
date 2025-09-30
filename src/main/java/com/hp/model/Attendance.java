@@ -33,6 +33,8 @@ public class Attendance {
 	private String status;
 	@Transient
 	private String user_type;
+	@Transient
+	private String authentication_id;
 	private int salary_id;
 	
 	@Transient
@@ -123,6 +125,12 @@ public class Attendance {
 	}
 	public void setCreatedAt(Date createdAt) {
 		this.createdAt = createdAt;
+	}
+	public String getAuthentication_id() {
+		return authentication_id;
+	}
+	public void setAuthentication_id(String authentication_id) {
+		this.authentication_id = authentication_id;
 	}
 	public String getStatus() {
 		return status;

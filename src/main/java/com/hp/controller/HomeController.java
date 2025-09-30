@@ -34,6 +34,7 @@ import com.hp.model.Designation;
 import com.hp.model.EmployeeDetails;
 import com.hp.model.EmployeeLeaves;
 import com.hp.model.EmployeeSalary;
+import com.hp.model.Leave;
 import com.hp.model.Leaves;
 import com.hp.model.LoginCredentials;
 import com.hp.model.PincodeData;
@@ -85,7 +86,7 @@ public class HomeController {
 	    if (user != null) {
 	        return prepareDashboard(user, session);
 	    } else {
-	        return new ModelAndView("redirect:../");
+	        return new ModelAndView("redirect:./");
 	    }
 	}
 
@@ -123,6 +124,7 @@ public class HomeController {
 	        }
 
 	        if ("Employee".equalsIgnoreCase(loginCredentials.getUser_type())) {
+	        	loginCredentials.setAuthentication_id(emp.getAuthentication_id());
 	            Map<String, Object> d = new HashMap<>();
 	            d.put("sno", emp.getDesignation_id());
 	            List<Designation> designations = (List<Designation>) commonDao.getDataByMap(d, new Designation(), null, null, 0, -1);
@@ -228,7 +230,7 @@ public class HomeController {
 	}
 	
 	
-	@RequestMapping(value="/get_leaves")
+	@RequestMapping(value="/leave_request")
 	public ModelAndView get_leaves(HttpSession session) throws IOException{
 		LoginCredentials loginData = (LoginCredentials) session.getAttribute("login_data");
 		if(loginData != null) {
@@ -451,6 +453,57 @@ public class HomeController {
 		}
 		else {
 			return new ModelAndView("redirect:/");
+		}
+	}
+	
+	/*************************************HRMS Page Url for app Start ****************************/
+	@RequestMapping(value="/login")
+	public ModelAndView login(HttpServletRequest request) throws IOException{
+		return new  ModelAndView("AppData/login");
+	}
+	@RequestMapping(value = "/emp_dashboard")
+	public ModelAndView emp_dashboard(HttpServletRequest request, HttpSession session) throws IOException {
+		 LoginCredentials loginData = (LoginCredentials) session.getAttribute("loginData");
+		    String email = request.getParameter("email");
+		    if(loginData != null) {
+		    	return new  ModelAndView("AppData/dashboard");
+		    }else {
+		    	Map<String,Object> map = new HashMap<String, Object>();
+		    	map.put("email", email);
+		    	List<LoginCredentials> login = (List<LoginCredentials>)commonDao.getDataByMap(map, new LoginCredentials(), null, null, 0, -1);
+		    	if(login.size() > 0) {
+		    		Map<String,Object> map1 = new HashMap<String, Object>();
+			    	map1.put("sno", login.get(0).getEmployee_id());
+			    	List<EmployeeDetails> emp = (List<EmployeeDetails>)commonDao.getDataByMap(map1, new EmployeeDetails(), null, null, 0, -1);
+		    		login.get(0).setEmployee_name(emp.get(0).getFirst_name()+" "+emp.get(0).getLast_name());
+		    		login.get(0).setAuthentication_id(emp.get(0).getAuthentication_id());
+			    	session.setAttribute("loginData", login.get(0));
+		    		return new  ModelAndView("AppData/dashboard");
+		    	}else {
+		    		return new  ModelAndView("AppData/login");
+		    	}
+		    }
+		}
+	@RequestMapping(value="/emp_attendance")
+	public ModelAndView emp_attendance(HttpServletRequest request, HttpSession session) throws IOException{
+		 LoginCredentials loginData = (LoginCredentials) session.getAttribute("loginData");
+		 if(loginData != null) {
+			 return new  ModelAndView("AppData/attendance");
+		 }else {
+	    		return new  ModelAndView("AppData/login");
+	    	}
+	}
+	@RequestMapping(value="/emp_leave_request")
+	public ModelAndView emp_leave_request(HttpServletRequest request, HttpSession session) throws IOException{
+		LoginCredentials loginData = (LoginCredentials) session.getAttribute("loginData");
+		if(loginData != null) {
+			List<Leaves> lv =(List<Leaves>)commonDao.getDataByMap(new HashMap<String, Object>(), new Leaves(), null, null, 0, -1);
+			
+			ModelAndView mv = new  ModelAndView("AppData/leaverequest");
+			mv.addObject("lv", lv);
+			return mv;
+		}else {
+			return new  ModelAndView("AppData/login");
 		}
 	}
 }

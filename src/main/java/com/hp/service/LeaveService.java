@@ -108,10 +108,11 @@ public class LeaveService {
 
 			List<LeaveRequest> leaveRequests = (List<LeaveRequest>) commonDao.getDataByMap(map1, new LeaveRequest(),
 					null, null, 0, -1);
-
+			
 			int r_leave = 0;
-			int sum = leaveRequests.stream().mapToInt(LeaveRequest::getLeave_days) // Extract the price value
-					.sum();
+			double sum = leaveRequests.stream()
+                    .mapToDouble(LeaveRequest::getLeave_days)
+                    .sum();
 			r_leave += leaves.get(0).getRemaining_leave();
 			r_leave -= sum;
 			if (leaves.size() > 0) {
@@ -263,8 +264,6 @@ public class LeaveService {
 			maps.put("leave_id", leave.get(0).getLeave_id());
 			List<EmployeeLeaves> empl = (List<EmployeeLeaves>) commonDao.getDataByMap(maps, new EmployeeLeaves(), null,
 					null, 0, -1);
-			empl.get(0).setRemaining_leave(empl.get(0).getRemaining_leave() - leave.get(0).getLeave_days());
-			commonDao.updateDataToDb(empl.get(0));
 			Map<String, Object> mpp = new HashMap<String, Object>();
 			mpp.put("sno", leave.get(0).getEmployee_id());
 			List<EmployeeDetails> emp = (List<EmployeeDetails>) commonDao.getDataByMap(mpp, new EmployeeDetails(), null, null,0, -1);
@@ -280,7 +279,8 @@ public class LeaveService {
 							new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime()));
 					Attendance a = new Attendance();
 					if (status.equals("yes")) {
-
+						empl.get(0).setRemaining_leave(empl.get(0).getRemaining_leave() - leave.get(0).getLeave_days());
+						commonDao.updateDataToDb(empl.get(0));
 						a.setAttendance_date(calendar.getTime());
 						a.setAttendance_type(1);
 						a.setEmployee_id(leave.get(0).getEmployee_id());
@@ -472,8 +472,14 @@ public class LeaveService {
 	                            if (!alreadyUpdatedThisMonth) {
 	                                float updatedLeave = el.getTotal_leaves() + leave.getInc_per_month();
 	                                float remdLeave = el.getRemaining_leave() + leave.getInc_per_month();
-	                                el.setTotal_leaves(updatedLeave);
-	                                el.setRemaining_leave(remdLeave);
+	                                if(leave.getLeaves_name().equalsIgnoreCase("Short Leave")) {
+	                                	el.setTotal_leaves(1);
+	  	                                el.setRemaining_leave(1);
+	                                }else {
+	                                	el.setTotal_leaves(updatedLeave);
+	  	                                el.setRemaining_leave(remdLeave);
+	                                }
+	                              
 	                                el.setCreatedAt(new Date());
 	                                commonDao.updateDataToDb(el);
 	                                anyUpdated = true;

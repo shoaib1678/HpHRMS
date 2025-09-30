@@ -36,6 +36,11 @@ public class LoginController {
 		session.invalidate();		
 		return new ModelAndView("redirect:./");
 	}
+	@RequestMapping(value = "/log_out")
+	public ModelAndView log_out(HttpServletRequest request,HttpSession session,HttpServletResponse response) {
+		session.invalidate();		
+		return new ModelAndView("redirect:login");
+	}
 	@RequestMapping(value="/change_password",method = RequestMethod.POST)
 	public ResponseEntity<Map<String,Object>> change_password1(HttpServletRequest request){
 		String sno = request.getParameter("sno");

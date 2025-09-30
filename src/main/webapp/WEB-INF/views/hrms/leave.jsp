@@ -18,10 +18,6 @@
 
 <jsp:include page="css.jsp"></jsp:include>
 
-<script
-	src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"
-	integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ=="
-	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
@@ -203,7 +199,7 @@
 							<div class=" " style="float: right; margin-top: 1rem;">
 								<button type="button" class="btn btn-secondary btn-sm"
 									data-bs-dismiss="modal" aria-label="Close">Close</button>
-								<button type="submit" class="btn btn-primary btn-sm">Save
+								<button type="submit" class="btn btn-primary btn-sm" id="sbtm">Save
 								</button>
 							</div>
 						</div>
@@ -222,7 +218,6 @@
 		let employee_id = $("#employee_id").val();
 		let user_type = $("#user_type").val();
 		let leave_approval_right = $("#leave_approval").val();
-
 		$(function() {
 			$("form[name='attendance']")
 					.validate(
@@ -246,61 +241,38 @@
 									}
 								},
 
-								messages : {
-
-									employeeId : {
-										required : "Please select employee",
-									},
-									leave_id : {
-										required : "Please select  leave"
-									},
-									to_date : {
-										required : "please select attendance date",
-									},
-									from_date : {
-										required : "please select attendance date",
-									},
-									reason : {
-										required : "please enter reason",
-									}
-
-								},
-
 								submitHandler : function(form) {
-									var employeeId = $("#employeeId").val();
+									$("sbtm").html("Please Wait...");
+									$("sbtm").prop("disabled", true);
+									if(user_type == "Admin"){
+										employee_id = $("#employeeId").val();
+									}
 									var leave_id = $("#leave_id").val();
 									var to_date = $("#to_date").val();
 									var from_date = $("#from_date").val();
 									var reason = $("#reason").val();
-
-									var obj = {};
-									if (user_type == "Employee") {
-										obj.employee_id = employee_id;
-									} else {
-										obj.employee_id = employeeId;
-									}
-
-									obj.leave_id = leave_id;
-									obj.fromDate = from_date;
-									obj.toDate = to_date;
-									obj.reason = reason;
+									var obj = {
+											"leave_id" : parseInt(leave_id),
+											"fromDate" : from_date,
+											"toDate" : to_date,
+											"reason" : reason,
+											"employee_id" : parseInt(employee_id)
+										};
 									$
 											.ajax({
-												url : 'leave_request',
+												url : 'send_leave_request',
 												type : 'post',
 												dataType : 'JSON',
 												data : JSON.stringify(obj),
 												contentType : "application/json",
 												success : function(data) {
 													if (data['status'] == 'Success') {
+														$("sbtm").html("Save");
+														$("sbtm").prop("disabled", false);
 														$('#emplyeedata_table')
 																.DataTable().ajax
 																.reload(null,
 																		false);
-														$(
-																'form[name="attendance"]')
-																.trigger(
-																		"reset");
 														Swal
 																.fire({
 																	icon : 'success',
@@ -309,14 +281,11 @@
 																})
 														$('#NewEmployeeForm')
 																.modal('toggle');
-
 													} else if (data['status'] == 'Already_Exist') {
+														$("sbtm").html("Save");
+														$("sbtm").prop("disabled", false);
 														$('#NewEmployeeForm')
 																.modal('toggle');
-														$(
-																'form[name="attendance"]')
-																.trigger(
-																		"reset");
 														Swal
 																.fire({
 																	icon : 'warning',
@@ -324,12 +293,10 @@
 																	text : data['message']
 																})
 													} else if (data['status'] == 'Failed') {
+														$("sbtm").html("Save");
+														$("sbtm").prop("disabled", false);
 														$('#NewEmployeeForm')
 																.modal('toggle');
-														$(
-																'form[name="attendance"]')
-																.trigger(
-																		"reset");
 														Swal
 																.fire({
 																	icon : 'error',
@@ -339,11 +306,12 @@
 													}
 												}
 											});
+
 								}
 							});
 
 		});
-
+		
 		function table() {
 			$("#emplyeedata_table")
 					.DataTable(
