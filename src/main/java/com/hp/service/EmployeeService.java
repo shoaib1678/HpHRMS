@@ -314,5 +314,30 @@ public class EmployeeService {
 		return response;
 	}
 
+
+	public Map<String, Object> update_employee(String sno, String status) {
+		Map<String, Object> response = new HashMap<String,Object>(); 
+		try {
+			Map<String, Object> map = new HashMap<String,Object>();
+			map.put("sno", Integer.parseInt(sno));
+			List<EmployeeDetails> employeeDetails = (List<EmployeeDetails>) commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
+			if(employeeDetails.size() >0) {
+				employeeDetails.get(0).setStatus(status);
+				commonDao.updateDataToDb(employeeDetails.get(0));
+				response.put("status", "Success");
+				response.put("message", "Status updated Successfully");
+				response.put("data", employeeDetails);
+			}else {
+				response.put("status", "No_Content");
+				response.put("message", "No_Data_Found");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("status", "Failed");
+			response.put("message", "Something Went Wrong" +e);
+		}
+		return response;
+	}
+
 	
 }

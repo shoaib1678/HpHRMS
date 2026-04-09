@@ -6,6 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 
 @Entity
 public class Leaves {
@@ -17,6 +18,8 @@ public class Leaves {
 	private String leaves_name;
 	private int leaves_count;
 	private float inc_per_month;
+	@Transient
+	private float rem;
 	private String progressive_leave;
 	private String status;
 	private Date createdAt;
@@ -32,6 +35,12 @@ public class Leaves {
 	}
 	public void setEmployee_id(int employee_id) {
 		this.employee_id = employee_id;
+	}
+	public float getRem() {
+		return rem;
+	}
+	public void setRem(float rem) {
+		this.rem = rem;
 	}
 	public float getInc_per_month() {
 		return inc_per_month;

@@ -130,30 +130,102 @@ List<EmployeeDetails> data = (List<EmployeeDetails>)request.getAttribute("data")
 
 						<!-- Users List Table -->
 						<div class="card ">
-							<div class="row p-4">
-								<%if(data.size() > 0){ 
-									for(EmployeeDetails e : data){%>
-									<div class="col-md-3">
-										<div class="card-container">
-											<img class="round" src="displaydocument?url=<%=e.getProfile_picture()%>" alt="user" style="width: 120px;height: 120px;object-fit: cover;"/>
-											<h3><%=e.getFirst_name()+" "+e.getLast_name() %></h3>
-											<h6><%=e.getDesignation_name()%></h6>
-											<p><%=e.getAddress() %></p>
-											<div class="buttons" style="padding-bottom: 25px;">
-												<button class="btn btn-info btn-sm" onclick="openPopup(<%=e.getSno()%>)"> <i class="fa-solid fa-eye me-0 me-sm-1"></i>
-													View
-												</button>
-												<%if(e.getStatus().equalsIgnoreCase("Active")){ %>
-												<button class="btn btn-danger btn-sm" onclick="updatestatus(<%=e.getSno()%>,'Deactive')">
-													Deactive
-												</button>
-												<%}else{ %>
-													<button class="btn btn-success btn-sm" onclick="updatestatus(<%=e.getSno()%>,'Active')">Active</button>
-												<%} %>
-											</div>
-										</div>
-									</div>
-								<%}} %>
+							<!-- Bootstrap Tabs -->
+							<ul class="nav nav-tabs mb-3" id="employeeTab" role="tablist">
+							    <li class="nav-item">
+							        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#activeEmp">
+							            Active Employees
+							        </button>
+							    </li>
+							    <li class="nav-item">
+							        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#deactiveEmp">
+							            Deactive Employees
+							        </button>
+							    </li>
+							</ul>
+							
+							<div class="tab-content">
+							
+							    <!-- ================= ACTIVE EMPLOYEES ================= -->
+							    <div class="tab-pane fade show active" id="activeEmp">
+							        <div class="row p-4">
+							            <% if(data.size() > 0){ 
+							                for(EmployeeDetails e : data){ 
+							                    if(e.getStatus().equalsIgnoreCase("Active")){ %>
+							
+							            <div class="col-md-3 mb-3">
+							                <div class="card-container" style="height: 330px;">
+							                    
+							                    <img class="round"
+							                         src="displaydocument?url=<%=e.getProfile_picture()%>"
+							                         style="width:120px;height:120px;object-fit:cover;" />
+							
+							                    <h3 style="margin-bottom: 0;">
+							                        <%=e.getFirst_name()+" "+e.getLast_name()%>
+							                    </h3>
+							
+							                    <h6><%=e.getDesignation_name()%></h6>
+							                    <p><%=e.getAddress()%></p>
+							
+							                    <div class="buttons pb-3">
+							                        <button class="btn btn-info btn-sm"
+							                                onclick="openPopup(<%=e.getSno()%>)">
+							                            <i class="fa-solid fa-eye me-1"></i> View
+							                        </button>
+							
+							                        <button class="btn btn-danger btn-sm"
+							                                onclick="updatestatus(<%=e.getSno()%>, 'Deactive')">
+							                            Deactivate
+							                        </button>
+							                    </div>
+							
+							                </div>
+							            </div>
+							
+							            <% } } } %>
+							        </div>
+							    </div>
+							
+							    <!-- ================= DEACTIVE EMPLOYEES ================= -->
+							    <div class="tab-pane fade" id="deactiveEmp">
+							        <div class="row p-4">
+							            <% if(data.size() > 0){ 
+							                for(EmployeeDetails e : data){ 
+							                    if(e.getStatus().equalsIgnoreCase("Deactive")){ %>
+							
+							            <div class="col-md-3 mb-3">
+							                <div class="card-container" style="height: 330px;">
+							                    
+							                    <img class="round"
+							                         src="displaydocument?url=<%=e.getProfile_picture()%>"
+							                         style="width:120px;height:120px;object-fit:cover;" />
+							
+							                    <h3 style="margin-bottom: 0;">
+							                        <%=e.getFirst_name()+" "+e.getLast_name()%>
+							                    </h3>
+							
+							                    <h6><%=e.getDesignation_name()%></h6>
+							                    <p><%=e.getAddress()%></p>
+							
+							                    <div class="buttons pb-3">
+							                        <button class="btn btn-info btn-sm"
+							                                onclick="openPopup(<%=e.getSno()%>)">
+							                            <i class="fa-solid fa-eye me-1"></i> View
+							                        </button>
+							
+							                        <button class="btn btn-success btn-sm"
+							                                onclick="updatestatus(<%=e.getSno()%>, 'Active')">
+							                            Activate
+							                        </button>
+							                    </div>
+							
+							                </div>
+							            </div>
+							
+							            <% } } } %>
+							        </div>
+							    </div>
+							
 							</div>
 							<!-- <div class="row p-4">
 								<h4>Employee Data</h4>
@@ -746,7 +818,75 @@ List<EmployeeDetails> data = (List<EmployeeDetails>)request.getAttribute("data")
 				}
 			});
 		}
-	
+		function updatestatus(sno, status) {	 
+		    Swal.fire({
+		        title: 'Do you want to change the status?',
+		        icon: 'question',
+		        showDenyButton: true,
+		        confirmButtonText: 'Yes',
+		        denyButtonText: 'No',
+		        customClass: {
+		            actions: 'my-actions',
+		            confirmButton: 'order-2',
+		            denyButton: 'order-3'
+		        }
+		    }).then((result) => {
+
+		        if (result.isConfirmed) {
+
+		            var fd = new FormData();
+		            fd.append("sno",sno);
+		            fd.append("status",status.trim());
+		            $.ajax({
+		                url: 'update_employee',
+		                type : 'post',
+						data : fd,
+						contentType : false,
+						processData : false,
+		                success: function (data) {
+		                    if (data && data.status === 'Success') {
+
+		                    	Swal.fire({
+		                            icon: 'success',
+		                            title: 'Status Updated!',
+		                            text: 'Status updated successfully',
+		                            timer: 2000,
+		                            showConfirmButton: false
+		                        });
+
+		                        setTimeout(function () {
+		                            location.reload();
+		                        }, 2000);
+
+		                    } else {
+		                        Swal.fire({
+		                            icon: 'error',
+		                            title: 'Failed!',
+		                            text: 'Status not updated'
+		                        });
+		                    }
+		                },
+
+		                error: function (xhr, status, error) {
+		                    Swal.fire({
+		                        icon: 'error',
+		                        title: 'Server Error!',
+		                        text: 'Something went wrong'
+		                    });
+		                    console.error(error);
+		                }
+		            });
+
+		        } else if (result.isDenied) {
+		            Swal.fire({
+		                icon: 'info',
+		                title: 'Cancelled',
+		                text: 'No changes made'
+		            });
+		        }
+
+		    });
+		}
 	function hello(e){
 		  $('#image-popup').css("display", "flex");
 		      $('#popup-img').attr('src', e.src);

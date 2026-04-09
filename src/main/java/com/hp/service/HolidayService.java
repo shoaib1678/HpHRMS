@@ -40,7 +40,9 @@ public class HolidayService {
 				details.setStatus("Active");
 				details.setCreatedAt(new Date());
 				int i = commonDao.addDataToDb(details);
-				List<EmployeeDetails> emp =(List<EmployeeDetails>) commonDao.getDataByMap(new HashMap<String,Object>(), new EmployeeDetails(), null, null, 0, -1);
+				Map<String, Object> mp =new HashMap<String, Object>();
+				mp.put("status", "Active");
+				List<EmployeeDetails> emp =(List<EmployeeDetails>) commonDao.getDataByMap(mp, new EmployeeDetails(), null, null, 0, -1);
 				for (EmployeeDetails e : emp) {
 					List<EmployeeSalary> employeeSalaries = (List<EmployeeSalary>) commonDao.getLatestDate(e.getSno(), formattedDate);
 					Attendance a = new Attendance();

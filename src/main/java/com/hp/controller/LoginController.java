@@ -55,4 +55,17 @@ public class LoginController {
 		Map<String, Object> response = loginService.validate_password(sno,password);
 		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
 	}
+	@RequestMapping(value="/forgot_password",method = RequestMethod.POST)
+	public ResponseEntity<Map<String,Object>> forgot_password(HttpServletRequest request){
+		String email = request.getParameter("email");
+		Map<String, Object> response = loginService.forgot_password(email);
+		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
+	}
+	@RequestMapping(value="/reset_password",method = RequestMethod.POST)
+	public ResponseEntity<Map<String,Object>> reset_password(HttpServletRequest request){
+		String sno = request.getParameter("sno");
+		String password = request.getParameter("password");
+		Map<String, Object> response = loginService.reset_password(sno,password);
+		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
+	}
 }

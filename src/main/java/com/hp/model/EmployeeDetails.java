@@ -28,12 +28,16 @@ public class EmployeeDetails {
 	private String contact_number;
 	@Transient
 	private String designation_name;
+	@Transient
+	private String department_name;
 	private String gender;
 	private int rights_id;
 	private int department_id;
 	private int designation_id;
 	@Temporal(TemporalType.DATE)
 	private Date joining_date;
+	@Temporal(TemporalType.DATE)
+	private Date dob;
 	private double salary_package;
 	private String adhar_number;
 	private String pan_number;
@@ -102,6 +106,12 @@ public class EmployeeDetails {
 	public void setLast_name(String last_name) {
 		this.last_name = last_name;
 	}
+	public String getDepartment_name() {
+		return department_name;
+	}
+	public void setDepartment_name(String department_name) {
+		this.department_name = department_name;
+	}
 	public String getEmail() {
 		return email;
 	}
@@ -140,6 +150,12 @@ public class EmployeeDetails {
 	}
 	public int getDepartment_id() {
 		return department_id;
+	}
+	public Date getDob() {
+		return dob;
+	}
+	public void setDob(Date dob) {
+		this.dob = dob;
 	}
 	public void setDepartment_id(int department_id) {
 		this.department_id = department_id;

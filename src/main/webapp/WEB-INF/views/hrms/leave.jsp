@@ -174,6 +174,7 @@
 										<%
 										}
 										%>
+										<option value="1001">Other</option>
 									</select>
 								</div>
 								<div class="col-md-6  mb-3">
@@ -391,7 +392,7 @@
 											"data" : function(data, type,
 													dataToSet) {
 												var date = new Date(
-														data.fromDate);
+														data.toDate);
 												var date1 = date.toDateString();
 												return date1;
 											}

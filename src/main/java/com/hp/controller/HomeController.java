@@ -39,6 +39,7 @@ import com.hp.model.Leaves;
 import com.hp.model.LoginCredentials;
 import com.hp.model.PincodeData;
 import com.hp.model.Rights;
+import com.hp.utils.EncriptionData;
 import com.hp.utils.Utils;
 
 @Controller
@@ -95,7 +96,7 @@ public class HomeController {
 
 	    Map<String, Object> map = new HashMap<>();
 	    map.put("sno", loginCredentials.getEmployee_id());
-
+	    map.put("status", "Active");
 	    List<EmployeeDetails> empList = (List<EmployeeDetails>) commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
 
 	    Set<String> rights_set = new HashSet<>();
@@ -140,9 +141,11 @@ public class HomeController {
 
 	    // Load all departments, designations, and employees
 	    Map<String, Object> map1 = new HashMap<>();
+	    Map<String, Object> map3 = new HashMap<>();
+	    map3.put("status", "Active");
 	    mv.addObject("departments", commonDao.getDataByMap(map1, new Department(), null, null, 0, -1));
 	    mv.addObject("designation", commonDao.getDataByMap(map1, new Designation(), null, null, 0, -1));
-	    mv.addObject("employeeDetails", commonDao.getDataByMap(map1, new EmployeeDetails(), null, null, 0, -1));
+	    mv.addObject("employeeDetails", commonDao.getDataByMap(map3, new EmployeeDetails(), null, null, 0, -1));
 
 	    return mv;
 	}
@@ -204,6 +207,7 @@ public class HomeController {
 		LoginCredentials loginData = (LoginCredentials) session.getAttribute("login_data");
 		if(loginData != null) {
 			Map<String, Object> map =  new HashMap<String,Object>();
+			map.put("status", "Active");
 			List<EmployeeDetails> employeeDetails = (List<EmployeeDetails>) commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
 			String user_type = loginData.getUser_type();
 			ModelAndView mv   = new ModelAndView("hrms/attendance");
@@ -235,8 +239,18 @@ public class HomeController {
 		LoginCredentials loginData = (LoginCredentials) session.getAttribute("login_data");
 		if(loginData != null) {
 			Map<String, Object> map =  new HashMap<String,Object>();
+			map.put("status", "Active");
 			List<EmployeeDetails> employeeDetails = (List<EmployeeDetails>) commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
 			List<Leaves> leaves = (List<Leaves>) commonDao.getDataByMap(map, new Leaves(), null, null, 0, -1);
+			if(loginData.getUser_type().equalsIgnoreCase("Employee")) {
+				for(Leaves l : leaves) {
+					Map<String, Object> map1 =  new HashMap<String,Object>();
+					map1.put("leave_id", l.getSno());
+					map1.put("employee_id", loginData.getEmployee_id());
+					List<EmployeeLeaves> el = (List<EmployeeLeaves>)commonDao.getDataByMap(map1, new EmployeeLeaves(), null, null, 0, -1);
+					l.setRem(el.get(0).getRemaining_leave());
+				}
+			}
 			String user_type = loginData.getUser_type();
 			ModelAndView mv   = new ModelAndView("hrms/leave");
 			mv.addObject("employeeDetails",employeeDetails);
@@ -478,7 +492,9 @@ public class HomeController {
 		    		login.get(0).setEmployee_name(emp.get(0).getFirst_name()+" "+emp.get(0).getLast_name());
 		    		login.get(0).setAuthentication_id(emp.get(0).getAuthentication_id());
 			    	session.setAttribute("loginData", login.get(0));
-		    		return new  ModelAndView("AppData/dashboard");
+			    	ModelAndView mv =  new  ModelAndView("AppData/dashboard");
+			    	mv.addObject("data", emp);
+			    	return mv;
 		    	}else {
 		    		return new  ModelAndView("AppData/login");
 		    	}
@@ -505,6 +521,51 @@ public class HomeController {
 		}else {
 			return new  ModelAndView("AppData/login");
 		}
+	}
+	@RequestMapping(value="/personal_information")
+	public ModelAndView personal_information(HttpServletRequest request, HttpSession session) throws IOException{
+		LoginCredentials loginData = (LoginCredentials) session.getAttribute("loginData");
+		if(loginData != null) {
+			Map<String, Object> map = new HashMap<String, Object>();
+			Map<String, Object> map1 = new HashMap<String, Object>();
+			Map<String, Object> map2 = new HashMap<String, Object>();
+			Map<String, Object> map3 = new HashMap<String, Object>();
+			map.put("sno", loginData.getEmployee_id());
+			List<EmployeeDetails> emp =(List<EmployeeDetails>)commonDao.getDataByMap(map, new EmployeeDetails(), null, null, 0, -1);
+			map1.put("sno", emp.get(0).getDepartment_id());
+			List<Department> dep = (List<Department>)commonDao.getDataByMap(map1, new Department(), null, null, 0, -1);
+			emp.get(0).setDepartment_name(dep.get(0).getDepartment());
+			map2.put("sno", emp.get(0).getDesignation_id());
+			List<Designation> des = (List<Designation>)commonDao.getDataByMap(map2, new Designation(), null, null, 0, -1);
+			emp.get(0).setDesignation_name(des.get(0).getDesignation_name());
+			map3.put("employee_id", loginData.getEmployee_id());
+			List<EmployeeLeaves> el = (List<EmployeeLeaves>)commonDao.getDataByMap(map3, new EmployeeLeaves(), null, null, 0, -1);
+			double lc = 0;
+			if(el.size() > 0) {
+				for(EmployeeLeaves e : el) {
+					lc += e.getRemaining_leave();
+				}
+			}
+			ModelAndView mv = new  ModelAndView("AppData/personal_information");
+			mv.addObject("data", emp);
+			mv.addObject("lc", lc);
+			return mv;
+		}else {
+			return new  ModelAndView("AppData/login");
+		}
+	}
+	@RequestMapping(value="/reset")
+	public ModelAndView reset(HttpServletRequest request, HttpSession session) throws IOException{
+		String sno = null;
+		try {
+			sno = EncriptionData.decrypt(request.getParameter("id"));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			ModelAndView mv = new  ModelAndView("AppData/resetPassword");
+			mv.addObject("sno", sno);
+			return mv;
 	}
 }
 

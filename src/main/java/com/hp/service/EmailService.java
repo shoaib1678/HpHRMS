@@ -53,7 +53,7 @@ public class EmailService {
 	    Map<String, Object> response = new HashMap<>();
 	    try {
 	        final String username = "haliconpublication@gmail.com";
-	        final String password = "zuba mcid vyan ykea";
+	        final String password = "jjtv euwt gbqs honl";
 
 	        Properties prop = new Properties();
 	        prop.put("mail.smtp.host", "smtp.gmail.com");
@@ -112,7 +112,7 @@ public class EmailService {
 		 Map<String, Object> response = new HashMap<>();
 		    try {
 		        final String username = "haliconpublication@gmail.com";  
-		        final String password = "zuba mcid vyan ykea";         
+		        final String password = "jjtv euwt gbqs honl";         
 
 		        Properties prop = new Properties();
 		        prop.put("mail.smtp.host", "smtp.gmail.com");

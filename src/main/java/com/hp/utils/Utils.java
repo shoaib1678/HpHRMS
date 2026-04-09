@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class Utils {
 	
 	//public static String staticimages = "C:/temp/";
-	public static String staticimages = "/opt/tomcat9/webapps/upload/";
+	public static String staticimages = "/opt/tomcat/webapps/uploads/";
 	DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
 	public String uploadImage(MultipartFile file) {

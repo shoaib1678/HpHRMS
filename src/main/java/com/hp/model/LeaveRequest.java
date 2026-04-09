@@ -27,6 +27,8 @@ public class LeaveRequest {
 	@Temporal(TemporalType.DATE)
 	private Date toDate;
 	private float leave_days;
+	@Transient
+	private String leave_type;
 	private String reason;
 	private String remarks;
 	private String status;
@@ -49,6 +51,13 @@ public class LeaveRequest {
 
 	public void setSno(int sno) {
 		this.sno = sno;
+	}
+	public String getLeave_type() {
+		return leave_type;
+	}
+
+	public void setLeave_type(String leave_type) {
+		this.leave_type = leave_type;
 	}
 
 	public int getEmployee_id() {

@@ -243,7 +243,7 @@ table {
 								<div class="modal-footer">
 									<button type="button" class="btn btn-label-secondary"
 										data-bs-dismiss="modal">Close</button>
-									<button type="submit" class="btn btn-primary">Save
+									<button type="submit" class="btn btn-primary" id="svbtn">Save
 										changes</button>
 								</div>
 							</form>
@@ -410,6 +410,8 @@ table {
 					
 				},
 				submitHandler : function(form) {
+					$("#svbtn").prop("disabled", true);
+					$("#svbtn").html("Please Wait...");
 					var ContactNo = $("#ContactNo").val();
 					var FirstName = $("#FirstName").val();
 					var LastName = $("#LastName").val();
@@ -473,23 +475,31 @@ table {
 						success : function(data) {
 
 							if (data['status'] == 'Success') {
+								$("#svbtn").prop("disabled", false);
+								$("#svbtn").html("Save Changes");
 								$("form[name='employee']").trigger("reset");
 								Swal.fire({
 									icon : 'success',
 									title : 'successfully!',
 									text : data['message']
 								})
+								
 								setTimeout(function() {
 									 window.location.href = "view_employee";
 								  }, 3000);
 
 							} else if (data['status'] == 'Already_Exist') {
+								$("#svbtn").prop("disabled", false);
+								$("#svbtn").html("Save Changes");
 								Swal.fire({
 									icon : 'warning',
 									title : 'Already!',
 									text : data['message']
 								})
+								
 							} else {
+								$("#svbtn").prop("disabled", false);
+								$("#svbtn").html("Save Changes");
 								Swal.fire({
 									icon : 'Sorry',
 									title : 'Invalid!',

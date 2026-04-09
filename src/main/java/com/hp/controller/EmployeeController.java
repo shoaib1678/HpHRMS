@@ -53,6 +53,13 @@ public class EmployeeController {
 		Map<String, Object> response = employeeService.getEmployeeForTeam(sno,department_id);
 		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
 	}
+	@RequestMapping(value="/update_employee",method = RequestMethod.POST)
+	public ResponseEntity<Map<String,Object>> update_employee(HttpServletRequest request ){
+		String sno = request.getParameter("sno");
+		String status = request.getParameter("status");
+		Map<String, Object> response = employeeService.update_employee(sno,status);
+		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
+	}
 	
 	@RequestMapping(value = "/add_documents", method = RequestMethod.POST)
 	public ResponseEntity<Map<String, Object>> add_documents(@RequestParam("file") MultipartFile[] file,

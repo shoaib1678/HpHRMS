@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.hp.model.EmployeeLeaves;
 import com.hp.model.LeaveRequest;
 import com.hp.model.Leaves;
 import com.hp.model.Planned_Leave;
@@ -102,6 +103,12 @@ public class LeaveController {
 		String status = request.getParameter("status");
 		String employee_id = request.getParameter("employee_id");
 		response = leaveService.get_leave_approval(employee_id,status);
+		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
+	}
+	@RequestMapping(value = "/update_empleaves",method = RequestMethod.POST)
+	public ResponseEntity<Map<String, Object>> update_empleaves(@RequestBody EmployeeLeaves leave){
+		Map<String, Object> response = new HashMap<String,Object>();
+		response = leaveService.update_empleaves(leave);
 		return new ResponseEntity<Map<String,Object>>(response,HttpStatus.OK);
 	}
 	

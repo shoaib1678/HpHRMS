@@ -268,30 +268,44 @@ public List<EmployeeSalary> getLatestDate(int emp_id,String date){
 //    }
 //    return leaves;
 //}
-public List<Leave> getleaves(String employeeId, String userType) {
-    Query query;
-
+public List<Leave> getleaves(String employeeId, String userType, int start, int length) {
+    
     String sql = "SELECT " +
-        "SUM(attendance_type) AS total_attendance, " +           
-        "MAX(MONTHNAME(attendance_date)) AS months, " +          
-        "YEAR(attendance_date) AS years, " +                     
-        "employee_id, " +                                        
-        "MAX(MONTH(attendance_date)) AS month_no, " +            
-        "MAX(status) AS status, " +                              
-        "MAX(salary_id) AS salary_id, " +                        
-        "MAX(createdAt) AS createdAt " +                         
-        "FROM Attendance ";
+        "SUM(a.attendance_type) AS total_attendance, " +
+        "MAX(MONTHNAME(a.attendance_date)) AS months, " +
+        "YEAR(a.attendance_date) AS years, " +
+        "a.employee_id, " +
+        "MAX(MONTH(a.attendance_date)) AS month_no, " +
+        // ✅ FIX 2: MAX(status) ki jagah subquery se latest status lo
+        "(SELECT status FROM Attendance " +
+        " WHERE employee_id = a.employee_id " +
+        " AND MONTH(attendance_date) = MONTH(MAX(a.attendance_date)) " +
+        " ORDER BY createdAt DESC LIMIT 1) AS status, " +
+        // ✅ FIX 3: salary_id employee se lo, MAX() se nahi
+        "MAX(a.salary_id) AS salary_id, " +
+        "MAX(a.createdAt) AS createdAt " +
+        "FROM Attendance a ";
 
     if (userType.equalsIgnoreCase("Admin")) {
-        sql += "GROUP BY YEAR(attendance_date), MONTH(attendance_date), employee_id " +
-               "ORDER BY YEAR(attendance_date) DESC, MONTH(attendance_date) DESC";
-        query = sessionFactory.getCurrentSession().createSQLQuery(sql);
+        sql += "GROUP BY YEAR(a.attendance_date), MONTH(a.attendance_date), a.employee_id " +
+               "ORDER BY YEAR(a.attendance_date) DESC, MONTH(a.attendance_date) DESC";
     } else {
-        sql += "WHERE employee_id = :empId " +
-               "GROUP BY YEAR(attendance_date), MONTH(attendance_date), employee_id " +
-               "ORDER BY YEAR(attendance_date) DESC, MONTH(attendance_date) DESC";
-        query = sessionFactory.getCurrentSession().createSQLQuery(sql);
+        sql += "WHERE a.employee_id = :empId " +
+               "GROUP BY YEAR(a.attendance_date), MONTH(a.attendance_date), a.employee_id " +
+               "ORDER BY YEAR(a.attendance_date) DESC, MONTH(a.attendance_date) DESC";
+    }
+
+    // ✅ FIX 1: Pagination add karo
+    Query query = sessionFactory.getCurrentSession().createSQLQuery(sql);
+
+    if (!userType.equalsIgnoreCase("Admin")) {
         query.setParameter("empId", employeeId);
+    }
+
+    // ✅ Pagination yahan set karo
+    if (length > 0) {
+        query.setFirstResult(start);
+        query.setMaxResults(length);
     }
 
     List<Object[]> data = query.list();
@@ -300,30 +314,73 @@ public List<Leave> getleaves(String employeeId, String userType) {
     System.out.println(data.size() + " attendance size");
 
     for (Object[] result : data) {
-        Leave leave = new Leave();
+        try {
+            Leave leave = new Leave();
 
-        Double attend = (Double) result[0];
-        String month = (String) result[1];
-        Integer year = ((Number) result[2]).intValue();
-        Integer emp_id = ((Number) result[3]).intValue();
-        Integer month_no = ((Number) result[4]).intValue();
-        String status = (String) result[5];
-        Integer salary_id = ((Number) result[6]).intValue();
-        Date createdAt = (Date) result[7];
+            // ✅ FIX 4: Safe casting — BigDecimal/Double dono handle karo
+            double attend = 0.0;
+            if (result[0] != null) {
+                attend = ((Number) result[0]).doubleValue();
+            }
 
-        leave.setTotal_attendance(attend);
-        leave.setMonth(month);
-        leave.setYear(year);
-        leave.setEmployee_id(emp_id);
-        leave.setMonth_no(month_no);
-        leave.setStatus(status);
-        leave.setSalary_id(salary_id);
-        leave.setCreatedAt(createdAt);
+            String month = result[1] != null ? result[1].toString() : "Unknown";
 
-        leaves.add(leave);
+            int year = result[2] != null ? ((Number) result[2]).intValue() : 0;
+            int emp_id = result[3] != null ? ((Number) result[3]).intValue() : 0;
+            int month_no = result[4] != null ? ((Number) result[4]).intValue() : 0;
+            String status = result[5] != null ? result[5].toString() : "Pending";
+            int salary_id = result[6] != null ? ((Number) result[6]).intValue() : 0;
+
+            // ✅ FIX 4: Date safe conversion
+            Date createdAt = null;
+            if (result[7] != null) {
+                if (result[7] instanceof Date) {
+                    createdAt = (Date) result[7];
+                } else {
+                    // MySQL Timestamp handle karo
+                    createdAt = new Date(((java.sql.Timestamp) result[7]).getTime());
+                }
+            }
+
+            leave.setTotal_attendance(attend);
+            leave.setMonth(month);
+            leave.setYear(year);
+            leave.setEmployee_id(emp_id);
+            leave.setMonth_no(month_no);
+            leave.setStatus(status);
+            leave.setSalary_id(salary_id);
+            leave.setCreatedAt(createdAt);
+
+            leaves.add(leave);
+
+        } catch (Exception e) {
+            // ✅ Ek row fail ho to poora loop mat roko
+            System.err.println("Error parsing attendance row: " + e.getMessage());
+        }
     }
 
     return leaves;
+}
+//Pagination ke liye total count chahiye
+public int getLeavesCount(String employeeId, String userType) {
+ String sql = "SELECT COUNT(*) FROM (" +
+     "SELECT employee_id FROM Attendance ";
+
+ if (userType.equalsIgnoreCase("Admin")) {
+     sql += "GROUP BY YEAR(attendance_date), MONTH(attendance_date), employee_id";
+ } else {
+     sql += "WHERE employee_id = :empId " +
+            "GROUP BY YEAR(attendance_date), MONTH(attendance_date), employee_id";
+ }
+ sql += ") AS total";
+
+ Query query = sessionFactory.getCurrentSession().createSQLQuery(sql);
+ if (!userType.equalsIgnoreCase("Admin")) {
+     query.setParameter("empId", employeeId);
+ }
+
+ Number count = (Number) query.uniqueResult();
+ return count != null ? count.intValue() : 0;
 }
 
 public List<Holiday> getDataByMapAttendance( String date,int start,int length) {

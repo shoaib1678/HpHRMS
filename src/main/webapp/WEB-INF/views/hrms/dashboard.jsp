@@ -338,7 +338,50 @@ int em=0;
 		</div>
 		<!-- / Layout page -->
 	</div>
-
+<div class="modal fade" id="NewEmployeeleave" data-bs-backdrop="static"
+		tabindex="-1">
+		<div class="modal-dialog modal-sm " role="document">
+			<div class="modal-content">
+				<div class="modal-header"
+					style="border-bottom: 1px solid lightgray;">
+					<h6>Update Apply Leave</h6>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<form name="leaveform" id="leaveform">
+					<div class="modal-body">
+						<div class="nav-align-top mb-4">
+							<div class="row">
+								<div class="col-md-12 mb-0">
+									<label for="l_type" class="form-label">Leave Type</label> <input
+										type="text" id="l_type" name="l_type" class="form-control" disabled/>
+								</div>
+								<div class="col-md-12 mb-0">
+									<label for="r_leave" class="form-label">Remaining Leave</label> <input
+										type="text" id="r_leave" name="r_leave" class="form-control" disabled/>
+								</div>
+								<div class="col-md-12 mb-0">
+									<label for="a_leave" class="form-label">Applied Leave</label> <input
+										type="text" id="a_leave" name="a_leave" class="form-control" />
+								</div>
+							<input type="hidden" id="eleave" name="eleave">
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer" style="border-top: 1px solid lightgray;">
+						<div class="col-md-12">
+							<div class=" " style="float: right; margin-top: 1rem;">
+								<button type="button" class="btn btn-secondary btn-sm"
+									data-bs-dismiss="modal" aria-label="Close">Close</button>
+								<button type="submit" class="btn btn-primary btn-sm" id="sbtm">Save
+								</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 	<!-- Overlay -->
 	<div class="layout-overlay layout-menu-toggle"></div>
 
@@ -361,39 +404,40 @@ $("#empId").change(function(){
 })
 function empdata(){
 	var today = new Date();
-	var currentMonth = today.getMonth(); // 0-based
-	var currentYear = today.getFullYear();
-	if (currentMonth === 11) {
-        currentMonth = 0;
-        currentYear += 1;
-    } else {
-        currentMonth += 1;
-    }
-	 var mm = parseInt(currentMonth);
-	 getcalanderdata(mm,currentYear);
-	 viewWorkingH(mm,currentYear);
+
+	// Get CURRENT month & year
+	var currentMonth = today.getMonth();   // 0–11
+	var currentYear  = today.getFullYear();
+
+	// Convert JS month → Real month (1–12)
+	var mm = currentMonth + 1;
+
+	// Now send CURRENT month data
+	getcalanderdata(mm, currentYear);
+	viewWorkingH(mm, currentYear);
 	getRemainingLeave();
 	rejectedtable();
 	approvedtable();
 	earnLeave();
+
 }
 if(parseInt(employee_id) > 0){
 	var today = new Date();
-	var currentMonth = today.getMonth(); // 0-based
-	var currentYear = today.getFullYear();
-	if (currentMonth === 11) {
-        currentMonth = 0;
-        currentYear += 1;
-    } else {
-        currentMonth += 1;
-    }
-	 var mm = parseInt(currentMonth);
-	 getcalanderdata(mm,currentYear);
-	 viewWorkingH(mm,currentYear);
+
+	var currentMonth = today.getMonth();   // JS month (0–11)
+	var currentYear  = today.getFullYear();
+
+	// Convert month → API format (1–12)
+	var mm = currentMonth + 1;
+
+	// Now send the correct CURRENT month & year
+	getcalanderdata(mm, currentYear);
+	viewWorkingH(mm, currentYear);
 	getRemainingLeave();
 	rejectedtable();
 	approvedtable();
 	earnLeave();
+
 }
 function next() {
     currentYear = (currentMonth === 11) ? currentYear + 1 : currentYear;
@@ -480,42 +524,56 @@ function earnLeave(){
         console.log("API not called – today is after the 10th");
     }
 }
-function getRemainingLeave(){
-var formData = new FormData();
-formData.append("employee_id", employee_id);
+function getRemainingLeave() {
+    var formData = new FormData();
+    formData.append("employee_id", employee_id);
 
-$.ajax({
-    url: "get_remaining", // Replace with your actual API
-    type: "POST",
-    data: formData,
-    processData: false,
-    contentType: false,
-    success: function (data) {
-        if (data['status'] === "Success") {
-            var tbody = $("#leaveTable tbody");
-            tbody.empty();
+    $.ajax({
+        url: "get_remaining", // Replace with your actual API
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (data) {
+            if (data['status'] === "Success") {
+                var tbody = $("#leaveTable tbody");
+                tbody.empty();
 
-            $.each(data.data, function (index, item) {
-            	if(item.leave_name != "Short Leave"){
-            		var row = "<tr>" +
-                    "<td class='text-center'>" + item.leave_name + "</td>" +
-                    "<td class='text-center'>" + item.total_leaves + "</td>" +
-                    "<td class='text-center'>" + item.remaining_leave + "</td>" +
-                    "</tr>";
-                tbody.append(row);
-            	}
-            });
-        } else {
-            alert("No leave data found.");
+                $.each(data.data, function (index, item) {
+                    if (item.leave_name !== "Short Leave") {
+                        var row = "<tr>";
+
+                        if (user_type === "Admin") {
+                            row += "<td class='text-center'><span id='name"+item.sno+"'>" + item.leave_name +"</span><a href='javascript:void(0)' onclick='editleave("+item.sno+")' class='fa fa-pencil-square' style='font-size: 17px;color: green;'></a></td>";
+                        } else {
+                            row += "<td class='text-center'>" + item.leave_name + "</td>";
+                        }
+
+                        row += "<td class='text-center' id='totall"+item.sno+"'>" + item.total_leaves + "</td>" +
+                               "<td class='text-center' id='totalr"+item.sno+"'>" + item.remaining_leave + "</td>" +
+                               "</tr>";
+
+                        tbody.append(row);
+                    }
+                });
+            } else {
+                alert("No leave data found.");
+            }
+        },
+        error: function (err) {
+            console.error("Error:", err);
+            alert("Failed to fetch leave data.");
         }
-    },
-    error: function (err) {
-        console.error("Error:", err);
-        alert("Failed to fetch leave data.");
-    }
-});
+    });
 }
-
+function editleave(sno){
+	$('#NewEmployeeleave').modal('toggle');
+	var name = $("#name"+sno).html();
+	var totalr = $("#totalr"+sno).html();
+	$("#l_type").val(name);
+	$("#r_leave").val(totalr);
+	$("#eleave").val(sno);
+}
 function approvedtable() {
 	 if ($.fn.DataTable.isDataTable("#approved_table")) {
 	        $('#approved_table').DataTable().clear().destroy();
@@ -739,6 +797,80 @@ function viewWorkingH(month, year) {
 				select : true
 			});
 }
+$(function() {
+	$("form[name='leaveform']")
+			.validate(
+
+					{
+						rules : {
+							a_leave : {
+								required : true,
+							}
+						},
+
+						submitHandler : function(form) {
+							$("sbtm").html("Please Wait...");
+							$("sbtm").prop("disabled", true);
+							var eleave = $("#eleave").val();
+							var empId = $("#empId").val();
+							var r_leave = $("#r_leave").val();
+							var a_leave = $("#a_leave").val();
+							var remaining = parseFloat(r_leave)-parseFloat(a_leave);
+							var obj = {
+									"sno" : parseInt(eleave),
+									"employee_id" : parseInt(empId),
+									"remaining_leave" : remaining,
+								};
+							$
+									.ajax({
+										url : 'update_empleaves',
+										type : 'post',
+										dataType : 'JSON',
+										data : JSON.stringify(obj),
+										contentType : "application/json",
+										success : function(data) {
+											if (data['status'] == 'Success') {
+												$("#totalr"+eleave).html(remaining);
+												$("sbtm").html("Save");
+												$("sbtm").prop("disabled", false);
+												Swal
+														.fire({
+															icon : 'success',
+															title : 'successfully!',
+															text : data['message']
+														})
+												$('#NewEmployeeleave')
+														.modal('toggle');
+											} else if (data['status'] == 'Already_Exist') {
+												$("sbtm").html("Save");
+												$("sbtm").prop("disabled", false);
+												$('#NewEmployeeleave')
+														.modal('toggle');
+												Swal
+														.fire({
+															icon : 'warning',
+															title : 'Already!',
+															text : data['message']
+														})
+											} else if (data['status'] == 'Failed') {
+												$("sbtm").html("Save");
+												$("sbtm").prop("disabled", false);
+												$('#NewEmployeeleave')
+														.modal('toggle');
+												Swal
+														.fire({
+															icon : 'error',
+															title : 'Invalid!',
+															text : data['message']
+														})
+											}
+										}
+									});
+
+						}
+					});
+
+});
 </script>
 </body>
 
